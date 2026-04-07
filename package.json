@@ -1,0 +1,65 @@
+{
+  "name": "aicmtrace",
+  "version": "1.0.1",
+  "description": "Web-based CMTrace log viewer",
+  "main": "electron/main.js",
+  "bin": "server.js",
+  "scripts": {
+    "start":            "node server.js",
+    "electron:dev":     "electron .",
+    "build":            "pkg server.js --targets node20-win-x64 --output dist/AICMTrace.exe --compress GZip",
+    "build:electron":   "electron-builder --win",
+    "build:electron:all": "electron-builder -wml"
+  },
+  "pkg": {
+    "assets": [
+      "public/**/*",
+      "node_modules/socket.io/client-dist/**"
+    ],
+    "scripts": [
+      "lib/**/*.js"
+    ]
+  },
+  "build": {
+    "appId": "com.aicmtrace.app",
+    "productName": "AICMTrace",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "server.js",
+      "lib/**/*",
+      "public/**/*",
+      "electron/**/*",
+      "build/**/*",
+      "node_modules/**/*",
+      "!node_modules/.cache/**",
+      "!node_modules/@yao-pkg/**",
+      "!dist/**",
+      "!dist-electron/**",
+      "!test/**"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        { "target": "nsis",     "arch": ["x64"] },
+        { "target": "portable", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    },
+    "asar": false
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "express": "^5.1.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@yao-pkg/pkg":   "^5.12.0",
+    "electron":       "^33.0.0",
+    "electron-builder":"^25.0.0"
+  }
+}

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AICMTrace</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+
+  <!-- ── Top bar: tabs + toolbar ─────────────────────────────────────── -->
+  <div id="topbar">
+    <div id="tab-bar">
+      <span class="brand">&#9889; AICMTrace</span>
+      <button class="tab-btn active" data-tab="viewer">&#128196; Log Viewer</button>
+      <button class="tab-btn" data-tab="intune">&#128295; Intune Diagnostics</button>
+      <button class="tab-btn" data-tab="dsreg">&#128187; DSRegCmd</button>
+    </div>
+    <div id="toolbar">
+      <!-- Log Viewer controls -->
+      <div class="toolbar-section" id="toolbar-viewer">
+        <button id="open-file-btn" class="btn btn-primary">Open File</button>
+        <span id="current-file">No file open</span>
+        <div class="severity-filters">
+          <button class="sev-btn active" data-sev="0">All</button>
+          <button class="sev-btn" data-sev="1">Info</button>
+          <button class="sev-btn" data-sev="2">Warn</button>
+          <button class="sev-btn" data-sev="3">Error</button>
+        </div>
+        <input id="filter-input" type="text" placeholder="Filter... (Ctrl+F to find)" autocomplete="off">
+        <label class="checkbox-label"><input type="checkbox" id="filter-regex-cb"> Regex</label>
+        <button id="channels-btn" class="btn">&#128221; Channels</button>
+        <button id="pause-btn" class="btn">Pause</button>
+        <button id="autoscroll-btn" class="btn active">Auto-scroll</button>
+        <button id="clear-btn" class="btn">Clear</button>
+        <button id="export-btn" class="btn">CSV</button>
+      </div>
+
+      <!-- Intune toolbar (hidden when not on intune tab) -->
+      <div class="toolbar-section" id="toolbar-intune" style="display:none">
+        <button id="intune-open-btn" class="btn btn-primary">Load IME Log</button>
+        <span id="intune-file-label" style="color:var(--accent2);font-size:12px;">No file loaded</span>
+        <button id="intune-clear-btn" class="btn">Clear</button>
+        <span style="color:var(--text3);font-size:11px;">Drag &amp; drop an IME log or AppWorkload log here</span>
+      </div>
+
+      <!-- DSRegCmd toolbar (hidden when not on dsreg tab) -->
+      <div class="toolbar-section" id="toolbar-dsreg" style="display:none">
+        <button id="dsreg-analyze-btn" class="btn btn-primary">Analyze</button>
+        <button id="dsreg-clear-btn" class="btn">Clear</button>
+        <span style="color:var(--text3);font-size:11px;">Paste output of: <code>dsregcmd /status</code></span>
+      </div>
+
+      <!-- Always-visible right controls -->
+      <div class="toolbar-right">
+        <select id="theme-select" title="Theme">
+          <option value="dark">Dark</option>
+          <option value="dracula">Dracula</option>
+          <option value="nord">Nord</option>
+          <option value="solarized">Solarized</option>
+          <option value="hotdog">Hot Dog Stand</option>
+        </select>
+        <div class="font-controls">
+          <button id="font-smaller" class="btn btn-icon" title="Decrease font size">A-</button>
+          <span id="font-size-display">13px</span>
+          <button id="font-larger"  class="btn btn-icon" title="Increase font size">A+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main content ─────────────────────────────────────────────────── -->
+  <div id="main">
+
+    <!-- ═══ Log Viewer Tab ═══════════════════════════════════════════════ -->
+    <div class="tab-content active" data-tab="viewer">
+      <div id="sidebar">
+        <div id="sidebar-header">&#128193; File Browser</div>
+        <div id="sidebar-path" title=""></div>
+        <ul id="file-list"><li class="loading">Loading...</li></ul>
+      </div>
+      <div id="resizer"></div>
+      <div id="viewer">
+        <!-- Find bar (Ctrl+F) -->
+        <div id="find-bar" class="hidden">
+          <input id="find-input" type="text" placeholder="Find in log..." autocomplete="off">
+          <label class="checkbox-label"><input type="checkbox" id="find-regex-cb"> Regex</label>
+          <span id="find-count"></span>
+          <button id="find-prev" class="btn btn-icon" title="Previous (Shift+F3)">&#9650;</button>
+          <button id="find-next" class="btn btn-icon" title="Next (F3)">&#9660;</button>
+          <button id="find-close" class="btn btn-icon" title="Close (Esc)">&#10005;</button>
+        </div>
+        <!-- Column header (resize handles on all but last column) -->
+        <div id="log-header" class="log-grid" style="display:none">
+          <span class="col-time">Time<i class="col-rz" data-col="0"></i></span>
+          <span class="col-date">Date<i class="col-rz" data-col="1"></i></span>
+          <span class="col-comp">Component<i class="col-rz" data-col="2"></i></span>
+          <span class="col-thread">Thread<i class="col-rz" data-col="3"></i></span>
+          <span class="col-delta">Delta<i class="col-rz" data-col="4"></i></span>
+          <span class="col-type">Type<i class="col-rz" data-col="5"></i></span>
+          <span class="col-message">Message</span>
+        </div>
+        <!-- Virtual scroll area + empty state -->
+        <div id="log-scroll-wrap">
+          <div id="log-scroll-inner"></div>
+        </div>
+        <div id="empty-state">
+          <span class="big">&#128196;</span>
+          <span>Select a log file from the browser on the left</span>
+          <span class="sub">or drag &amp; drop a file anywhere here</span>
+        </div>
+        <!-- Detail panel -->
+        <div id="detail-panel"></div>
+      </div>
+    </div>
+
+    <!-- ═══ Intune Diagnostics Tab ═══════════════════════════════════════ -->
+    <div class="tab-content" data-tab="intune">
+      <div id="intune-wrap">
+        <div id="intune-body">
+          <div id="intune-sidebar">
+            <div class="intune-summary-box" id="intune-summary-box" style="display:none">
+              <h3>Summary</h3>
+              <div id="intune-summary-content"></div>
+            </div>
+            <div class="intune-summary-box" id="intune-dl-box" style="display:none">
+              <h3>Downloads</h3>
+              <div id="intune-dl-content"></div>
+            </div>
+          </div>
+          <div id="intune-timeline">
+            <div class="intune-empty" id="intune-empty">
+              <div style="font-size:40px;margin-bottom:12px;">&#128295;</div>
+              <div>Load an Intune Management Extension log to see a diagnostic timeline.</div>
+              <div style="margin-top:8px;color:var(--text3);font-size:12px;">
+                Typical path: C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ DSRegCmd Tab ════════════════════════════════════════════════ -->
+    <div class="tab-content" data-tab="dsreg">
+      <div id="dsreg-wrap">
+        <div id="dsreg-input-panel">
+          <h3>&#128187; DSRegCmd Analyzer</h3>
+          <p>Paste the output of <strong>dsregcmd /status</strong> below, then click Analyze.</p>
+          <p style="margin-top:4px;">You can also load a saved .txt file using the Analyze button.</p>
+          <textarea id="dsreg-textarea" placeholder="Paste dsregcmd /status output here...&#10;&#10;Example:&#10;+------...&#10;| Device State&#10;...&#10;AzureAdJoined : YES"></textarea>
+          <input type="file" id="dsreg-file-input" accept=".txt,.log" style="display:none">
+          <button id="dsreg-load-file-btn" class="btn" style="margin-top:4px;">&#128193; Load from file</button>
+        </div>
+        <div id="dsreg-results">
+          <div class="dsreg-empty" id="dsreg-empty">
+            Paste <code>dsregcmd /status</code> output on the left and click <strong>Analyze</strong>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Status bar ───────────────────────────────────────────────────── -->
+  <div id="statusbar">
+    <span id="status-entries">0 entries</span>
+    <span id="status-filtered"></span>
+    <span id="status-watching"></span>
+    <span id="status-errors"></span>
+  </div>
+
+  <!-- ── Row detail modal ─────────────────────────────────────────────── -->
+  <div id="row-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title-text">Log Entry Detail</span>
+        <button class="modal-close" id="modal-close" title="Close (Esc)">&#10005;</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Channel picker modal ─────────────────────────────────────────── -->
+  <div id="channel-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog channel-modal-dialog">
+      <div class="modal-header">
+        <span class="modal-title">&#128221; Windows Event Channels</span>
+        <button class="modal-close" id="channel-modal-close" title="Close (Esc)">&#10005;</button>
+      </div>
+      <div class="channel-search-wrap">
+        <input id="channel-search" type="text" placeholder="Search channels..." autocomplete="off">
+      </div>
+      <div id="channel-list-wrap">
+        <div id="channel-list-loading" class="channel-list-msg">Loading channels...</div>
+        <ul id="channel-list"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io.min.js"></script>
+  <script src="errorCodes.js"></script>
+  <script src="app.js"></script>
+  <script src="intuneTab.js"></script>
+  <script src="dsregTab.js"></script>
+</body>
+</html>
