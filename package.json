@@ -5,10 +5,10 @@
   "main": "electron/main.js",
   "bin": "server.js",
   "scripts": {
-    "start":            "node server.js",
-    "electron:dev":     "electron .",
-    "build":            "pkg server.js --targets node20-win-x64 --output dist/AICMTrace.exe --compress GZip",
-    "build:electron":   "electron-builder --win",
+    "start": "node server.js",
+    "electron:dev": "electron .",
+    "build": "pkg server.js --targets node20-win-x64 --output dist/AICMTrace.exe --compress GZip",
+    "build:electron": "electron-builder --win",
     "build:electron:all": "electron-builder -wml"
   },
   "pkg": {
@@ -42,8 +42,18 @@
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        { "target": "nsis",     "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
       ]
     },
     "nsis": {
@@ -58,8 +68,8 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "@yao-pkg/pkg":   "^5.12.0",
-    "electron":       "^33.0.0",
-    "electron-builder":"^25.0.0"
+    "@yao-pkg/pkg": "^5.12.0",
+    "electron": "^41.1.1",
+    "electron-builder": "^26.8.1"
   }
 }
