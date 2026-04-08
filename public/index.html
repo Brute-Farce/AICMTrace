@@ -8,27 +8,47 @@
 </head>
 <body data-theme="dark">
 
-  <!-- ── Top bar: tabs + toolbar ─────────────────────────────────────── -->
+  <!-- ── Top bar: brand + main tabs + global controls ───────────────────── -->
   <div id="topbar">
-    <div id="tab-bar">
+    <div id="main-tab-bar">
       <span class="brand">&#9889; AICMTrace</span>
-      <button class="tab-btn active" data-tab="viewer">&#128196; Log Viewer</button>
-      <button class="tab-btn" data-tab="intune">&#128295; Intune Diagnostics</button>
-      <button class="tab-btn" data-tab="dsreg">&#128187; DSRegCmd</button>
+      <button class="main-tab active" data-tab="viewer">&#128196; Log Viewer</button>
+      <button class="main-tab" data-tab="eventviewer">&#128221; Event Viewer</button>
+      <button class="main-tab" data-tab="intune">&#128295; Intune Diagnostics</button>
+      <button class="main-tab" data-tab="dsreg">&#128187; DSRegCmd</button>
+      <div class="topbar-right">
+        <label class="topbar-label">Theme</label>
+        <select id="theme-select" title="Color Theme">
+          <option value="dark">Dark</option>
+          <option value="dracula">Dracula</option>
+          <option value="nord">Nord</option>
+          <option value="solarized">Solarized</option>
+          <option value="cyberpunk">Cyberpunk</option>
+          <option value="light">Light</option>
+          <option value="hotdog">Hot Dog Stand</option>
+        </select>
+        <div class="font-controls">
+          <button id="font-smaller" class="btn btn-icon" title="Decrease font size">A&#8722;</button>
+          <span id="font-size-display">13px</span>
+          <button id="font-larger"  class="btn btn-icon" title="Increase font size">A+</button>
+        </div>
+      </div>
     </div>
+
+    <!-- Contextual toolbar (one section shown per active tab) -->
     <div id="toolbar">
-      <!-- Log Viewer controls -->
       <div class="toolbar-section" id="toolbar-viewer">
-        <button id="open-file-btn" class="btn btn-primary">Open File</button>
-        <span id="current-file">No file open</span>
+        <button id="open-file-btn" class="btn btn-primary">&#43; Add Log</button>
+        <div class="sep"></div>
         <div class="severity-filters">
           <button class="sev-btn active" data-sev="0">All</button>
           <button class="sev-btn" data-sev="1">Info</button>
           <button class="sev-btn" data-sev="2">Warn</button>
           <button class="sev-btn" data-sev="3">Error</button>
         </div>
-        <input id="filter-input" type="text" placeholder="Filter... (Ctrl+F to find)" autocomplete="off">
+        <input id="filter-input" type="text" placeholder="Filter&#8230; (Ctrl+F to find)" autocomplete="off">
         <label class="checkbox-label"><input type="checkbox" id="filter-regex-cb"> Regex</label>
+        <div class="sep"></div>
         <button id="channels-btn" class="btn">&#128221; Channels</button>
         <button id="pause-btn" class="btn">Pause</button>
         <button id="autoscroll-btn" class="btn active">Auto-scroll</button>
@@ -36,62 +56,86 @@
         <button id="export-btn" class="btn">CSV</button>
       </div>
 
-      <!-- Intune toolbar (hidden when not on intune tab) -->
-      <div class="toolbar-section" id="toolbar-intune" style="display:none">
-        <button id="intune-open-btn" class="btn btn-primary">Load IME Log</button>
-        <span id="intune-file-label" style="color:var(--accent2);font-size:12px;">No file loaded</span>
-        <button id="intune-clear-btn" class="btn">Clear</button>
-        <span style="color:var(--text3);font-size:11px;">Drag &amp; drop an IME log or AppWorkload log here</span>
+      <div class="toolbar-section" id="toolbar-eventviewer" style="display:none">
+        <div class="severity-filters">
+          <button class="ev-sev-btn active" data-sev="0">All</button>
+          <button class="ev-sev-btn" data-sev="3">Errors</button>
+          <button class="ev-sev-btn" data-sev="2">Warnings</button>
+          <button class="ev-sev-btn" data-sev="1">Information</button>
+        </div>
+        <div class="sep"></div>
+        <label class="topbar-label">Time:</label>
+        <select id="ev-time-filter">
+          <option value="0">All time</option>
+          <option value="1">Last hour</option>
+          <option value="24">Last 24 hours</option>
+          <option value="168">Last 7 days</option>
+          <option value="720">Last 30 days</option>
+        </select>
+        <div class="sep"></div>
+        <button id="ev-refresh-btn" class="btn">&#8635; Refresh</button>
+        <button id="ev-summary-toggle" class="btn active">&#128202; Summary</button>
+        <button id="ev-export-btn" class="btn">CSV</button>
       </div>
 
-      <!-- DSRegCmd toolbar (hidden when not on dsreg tab) -->
+      <div class="toolbar-section" id="toolbar-intune" style="display:none">
+        <button id="intune-open-btn" class="btn btn-primary">Load IME Log</button>
+        <span id="intune-file-label">No file loaded</span>
+        <button id="intune-clear-btn" class="btn">Clear</button>
+        <span class="toolbar-hint">Drag &amp; drop an IME log or AppWorkload log here</span>
+      </div>
+
       <div class="toolbar-section" id="toolbar-dsreg" style="display:none">
         <button id="dsreg-analyze-btn" class="btn btn-primary">Analyze</button>
         <button id="dsreg-clear-btn" class="btn">Clear</button>
-        <span style="color:var(--text3);font-size:11px;">Paste output of: <code>dsregcmd /status</code></span>
-      </div>
-
-      <!-- Always-visible right controls -->
-      <div class="toolbar-right">
-        <select id="theme-select" title="Theme">
-          <option value="dark">Dark</option>
-          <option value="dracula">Dracula</option>
-          <option value="nord">Nord</option>
-          <option value="solarized">Solarized</option>
-          <option value="hotdog">Hot Dog Stand</option>
-        </select>
-        <div class="font-controls">
-          <button id="font-smaller" class="btn btn-icon" title="Decrease font size">A-</button>
-          <span id="font-size-display">13px</span>
-          <button id="font-larger"  class="btn btn-icon" title="Increase font size">A+</button>
-        </div>
+        <span class="toolbar-hint">Paste output of: <code>dsregcmd /status</code></span>
       </div>
     </div>
   </div>
 
-  <!-- ── Main content ─────────────────────────────────────────────────── -->
+  <!-- ── Main content ────────────────────────────────────────────────────── -->
   <div id="main">
 
-    <!-- ═══ Log Viewer Tab ═══════════════════════════════════════════════ -->
+    <!-- ═══ Log Viewer Tab ════════════════════════════════════════════════ -->
     <div class="tab-content active" data-tab="viewer">
+
+      <!-- File Browser sidebar -->
       <div id="sidebar">
-        <div id="sidebar-header">&#128193; File Browser</div>
+        <div class="panel-header">&#128193; File Browser</div>
         <div id="sidebar-path" title=""></div>
-        <ul id="file-list"><li class="loading">Loading...</li></ul>
+        <ul id="file-list"><li class="loading">Loading&#8230;</li></ul>
       </div>
-      <div id="resizer"></div>
+      <div class="resizer" id="resizer"></div>
+
+      <!-- Open Logs panel -->
+      <div id="files-panel">
+        <div class="panel-header">
+          <span>&#128195; Open Logs</span>
+          <button id="files-panel-clear" class="panel-header-btn" title="Remove all logs">&#10005; All</button>
+        </div>
+        <ul id="open-files-list"></ul>
+        <div id="open-files-empty" class="panel-empty">
+          <div class="panel-empty-icon">&#128196;</div>
+          <div>No logs open</div>
+          <div class="sub">Use the file browser or<br>&#43; Add Log to get started</div>
+        </div>
+      </div>
+      <div class="resizer" id="resizer2"></div>
+
+      <!-- Log View pane -->
       <div id="viewer">
-        <!-- Find bar (Ctrl+F) -->
+        <!-- Find bar -->
         <div id="find-bar" class="hidden">
-          <input id="find-input" type="text" placeholder="Find in log..." autocomplete="off">
+          <input id="find-input" type="text" placeholder="Find in log&#8230;" autocomplete="off">
           <label class="checkbox-label"><input type="checkbox" id="find-regex-cb"> Regex</label>
           <span id="find-count"></span>
           <button id="find-prev" class="btn btn-icon" title="Previous (Shift+F3)">&#9650;</button>
           <button id="find-next" class="btn btn-icon" title="Next (F3)">&#9660;</button>
           <button id="find-close" class="btn btn-icon" title="Close (Esc)">&#10005;</button>
         </div>
-        <!-- Column header (resize handles on all but last column) -->
+        <!-- Column header -->
         <div id="log-header" class="log-grid" style="display:none">
+          <span class="col-src" title="Source file"></span>
           <span class="col-time">Time<i class="col-rz" data-col="0"></i></span>
           <span class="col-date">Date<i class="col-rz" data-col="1"></i></span>
           <span class="col-comp">Component<i class="col-rz" data-col="2"></i></span>
@@ -100,21 +144,81 @@
           <span class="col-type">Type<i class="col-rz" data-col="5"></i></span>
           <span class="col-message">Message</span>
         </div>
-        <!-- Virtual scroll area + empty state -->
+        <!-- Virtual scroll area -->
         <div id="log-scroll-wrap">
           <div id="log-scroll-inner"></div>
         </div>
+        <!-- Empty state -->
         <div id="empty-state">
           <span class="big">&#128196;</span>
-          <span>Select a log file from the browser on the left</span>
-          <span class="sub">or drag &amp; drop a file anywhere here</span>
+          <span>Add log files using the browser on the left or &#43; Add Log</span>
+          <span class="sub">Drag &amp; drop files here, or open Windows Event channels via the Channels button</span>
         </div>
         <!-- Detail panel -->
         <div id="detail-panel"></div>
       </div>
     </div>
 
-    <!-- ═══ Intune Diagnostics Tab ═══════════════════════════════════════ -->
+    <!-- ═══ Event Viewer Tab ══════════════════════════════════════════════ -->
+    <div class="tab-content" data-tab="eventviewer">
+      <!-- Channel tree sidebar -->
+      <div id="ev-tree-panel">
+        <div class="panel-header">&#128203; Event Logs</div>
+        <div id="ev-tree"></div>
+      </div>
+      <div class="resizer" id="ev-resizer"></div>
+      <!-- Main area: summary + entries -->
+      <div id="ev-main">
+        <!-- Summary of Administrative Events -->
+        <div id="ev-summary-panel">
+          <div class="panel-header collapsible" id="ev-summary-header">
+            <span>&#128202; Summary of Administrative Events</span>
+            <button id="ev-summary-toggle-btn" class="panel-header-btn" title="Collapse">&#9660;</button>
+          </div>
+          <div id="ev-summary-body">
+            <div id="ev-summary-empty" class="panel-empty small">
+              Select a log from the tree to see event summary
+            </div>
+            <table id="ev-summary-table" style="display:none">
+              <thead>
+                <tr>
+                  <th class="ev-sum-type">Event Type</th>
+                  <th class="ev-sum-src">Source</th>
+                  <th class="ev-sum-log">Log</th>
+                  <th class="ev-sum-id">Event ID</th>
+                  <th class="ev-sum-count">Count</th>
+                  <th class="ev-sum-last">Last Occurrence</th>
+                </tr>
+              </thead>
+              <tbody id="ev-summary-rows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Log entries pane -->
+        <div id="ev-viewer">
+          <div id="ev-log-header" class="ev-log-grid">
+            <span class="ev-col-level">Level</span>
+            <span class="ev-col-datetime">Date / Time</span>
+            <span class="ev-col-source">Source</span>
+            <span class="ev-col-id">Event ID</span>
+            <span class="ev-col-task">Task Category</span>
+            <span class="ev-col-message">Description</span>
+          </div>
+          <div id="ev-scroll-wrap">
+            <div id="ev-scroll-inner"></div>
+          </div>
+          <div id="ev-empty-state" class="ev-empty">
+            <div class="big">&#128221;</div>
+            <div>Select a log from the tree on the left</div>
+            <div class="sub">Windows Logs &#8594; Application, System, Security&#8230;</div>
+          </div>
+          <div id="ev-detail-panel"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Intune Diagnostics Tab ════════════════════════════════════════ -->
     <div class="tab-content" data-tab="intune">
       <div id="intune-wrap">
         <div id="intune-body">
@@ -141,14 +245,14 @@
       </div>
     </div>
 
-    <!-- ═══ DSRegCmd Tab ════════════════════════════════════════════════ -->
+    <!-- ═══ DSRegCmd Tab ══════════════════════════════════════════════════ -->
     <div class="tab-content" data-tab="dsreg">
       <div id="dsreg-wrap">
         <div id="dsreg-input-panel">
           <h3>&#128187; DSRegCmd Analyzer</h3>
           <p>Paste the output of <strong>dsregcmd /status</strong> below, then click Analyze.</p>
-          <p style="margin-top:4px;">You can also load a saved .txt file using the Analyze button.</p>
-          <textarea id="dsreg-textarea" placeholder="Paste dsregcmd /status output here...&#10;&#10;Example:&#10;+------...&#10;| Device State&#10;...&#10;AzureAdJoined : YES"></textarea>
+          <p style="margin-top:4px;">You can also load a saved .txt file using the button below.</p>
+          <textarea id="dsreg-textarea" placeholder="Paste dsregcmd /status output here&#8230;&#10;&#10;Example:&#10;+------...&#10;| Device State&#10;...&#10;AzureAdJoined : YES"></textarea>
           <input type="file" id="dsreg-file-input" accept=".txt,.log" style="display:none">
           <button id="dsreg-load-file-btn" class="btn" style="margin-top:4px;">&#128193; Load from file</button>
         </div>
@@ -162,7 +266,7 @@
 
   </div>
 
-  <!-- ── Status bar ───────────────────────────────────────────────────── -->
+  <!-- ── Status bar ──────────────────────────────────────────────────────── -->
   <div id="statusbar">
     <span id="status-entries">0 entries</span>
     <span id="status-filtered"></span>
@@ -170,7 +274,7 @@
     <span id="status-errors"></span>
   </div>
 
-  <!-- ── Row detail modal ─────────────────────────────────────────────── -->
+  <!-- ── Row detail modal ────────────────────────────────────────────────── -->
   <div id="row-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-dialog">
       <div class="modal-header">
@@ -181,7 +285,7 @@
     </div>
   </div>
 
-  <!-- ── Channel picker modal ─────────────────────────────────────────── -->
+  <!-- ── Channel picker modal ────────────────────────────────────────────── -->
   <div id="channel-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-dialog channel-modal-dialog">
       <div class="modal-header">
@@ -189,10 +293,10 @@
         <button class="modal-close" id="channel-modal-close" title="Close (Esc)">&#10005;</button>
       </div>
       <div class="channel-search-wrap">
-        <input id="channel-search" type="text" placeholder="Search channels..." autocomplete="off">
+        <input id="channel-search" type="text" placeholder="Search channels&#8230;" autocomplete="off">
       </div>
       <div id="channel-list-wrap">
-        <div id="channel-list-loading" class="channel-list-msg">Loading channels...</div>
+        <div id="channel-list-loading" class="channel-list-msg">Loading channels&#8230;</div>
         <ul id="channel-list"></ul>
       </div>
     </div>
@@ -203,5 +307,6 @@
   <script src="app.js"></script>
   <script src="intuneTab.js"></script>
   <script src="dsregTab.js"></script>
+  <script src="eventViewer.js"></script>
 </body>
 </html>
